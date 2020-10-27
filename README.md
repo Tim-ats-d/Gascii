@@ -2,7 +2,7 @@
 
 A graphic and interactive **table** of printable **ASCII** characters using `curses` librairie.
 
-![image](https://github.com/Tim-ats-d/Gascii/blob/main/asset/image.png)
+![image](https://user-images.githubusercontent.com/59396366/97365060-56364600-18a5-11eb-83be-4ccdb416a4a0.png)
 #### Commands
 Use the **directional arrows** to move around the table and **Q** key to exit. To move quickly use the **page up**, **page down**, **end** and **start keys**.
 
