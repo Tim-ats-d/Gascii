@@ -76,10 +76,10 @@ def cursor_position(stdscr, pos_x: int, pos_y: int, x_max: int, y_max: int):
             cursor_x = pos_x + x_max
 
         cursor_x = max(pos_x, cursor_x)
-        cursor_x = min(pos_x + 30, cursor_x)
+        cursor_x = min(pos_x + x_max, cursor_x)
 
         cursor_y = max(pos_y, cursor_y)
-        cursor_y = min(pos_y + 10, cursor_y)
+        cursor_y = min(pos_y + y_max, cursor_y)
 
         yield stdscr.inch(cursor_y, cursor_x)
 
