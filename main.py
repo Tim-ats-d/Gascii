@@ -26,6 +26,7 @@
 import curses
 import curses.textpad
 import os
+from typing import Any, NoReturn
 import unicodedata
 
 
@@ -33,26 +34,37 @@ COLS, ROWS = os.get_terminal_size()
 ASCII_CHARS = [chr(char) for char in range(32, 127)]
 
 
-def cutting_list(list_: list, part_size: int):
-    """Yield a sub-list of size part_size of the given list."""
-    for part in range(0, len(list_), part_size):
-        yield list_[part:part + part_size]
+def make_chunk(iterable: list,
+               chunk_length: int) -> list[Any]:
+    """Yield chunk of given iterator separated into chunk_length bundles."""
+    for chunk in range(0, len(iterable), chunk_length):
+        yield iterable[chunk:chunk + chunk_length]
 
 
-def displays_table(stdscr, pos_x: int, pos_y: int, chars_list: list):
-    """Displays each character in the list of given characters spaced from each other and separated
-    by a blank line.
+def displays_table(stdscr,
+                   pos_x: int,
+                   pos_y: int,
+                   chars_list: list) -> NoReturn:
+    """Displays each character in the list of given characters spaced from each
+    other and separated by a blank line.
     """
-    chars_list = cutting_list(ASCII_CHARS, 16)
+    chars_list = make_chunk(ASCII_CHARS, 16)
 
     for y, chars in enumerate(chars_list):
         for x, char in enumerate(chars):
-            stdscr.addstr(pos_y + y*2, pos_x + x*2, "%s " % char)
+            stdscr.addstr(pos_y + y*2,
+                          pos_x + x*2,
+                          char + " ")
 
 
-def cursor_position(stdscr, pos_x: int, pos_y: int, x_max: int, y_max: int):
-    """Manages the movements of the cursor so that it can be overtaken in the zone
-    (pos_x;pos_y);(pos_x + x_max;pos_y + y_max) and yields the identifier of the character below it.
+def cursor_position(stdscr,
+                    pos_x: int,
+                    pos_y: int,
+                    x_max: int,
+                    y_max: int) -> str:
+    """Manages the movements of the cursor so that it can be overtaken in the
+    zone (pos_x;pos_y);(pos_x + x_max;pos_y + y_max) and yields the identifier
+    of the character below it.
     """
     key = 0
     cursor_x, cursor_y = pos_x, pos_y
@@ -66,13 +78,13 @@ def cursor_position(stdscr, pos_x: int, pos_y: int, x_max: int, y_max: int):
             cursor_x -= 2
         elif key == curses.KEY_RIGHT:
             cursor_x += 2
-        elif key == 339:  # page ▲ key.
+        elif key == 339:  # Page ▲ key.
             cursor_y = pos_y
-        elif key == 338:  # page ▼ key.
+        elif key == 338:  # Page ▼ key.
             cursor_y = pos_y + y_max
-        elif key == 262:  # begin ◄ key.
+        elif key == 262:  # Begin ◄ key.
             cursor_x = pos_x
-        elif key == 360:  # end ► key.
+        elif key == 360:  # End ► key.
             cursor_x = pos_x + x_max
 
         cursor_x = max(pos_x, cursor_x)
@@ -89,10 +101,14 @@ def cursor_position(stdscr, pos_x: int, pos_y: int, x_max: int, y_max: int):
         stdscr.refresh()
 
 
-def character_indications(stdscr, pos_x: int, pos_y: int, char: int):
-    """Displays an information panel on the given character identifier. The information panel
-    contains title, description, exit indications and character identifier given in binary, octal,
-    decimal and hexadecimal format.
+def character_indications(stdscr,
+                          pos_x: int,
+                          pos_y: int,
+                          char_code: int) -> NoReturn:
+    """Displays an information panel on the given character identifier.
+    The information panel contains title, description, exit indications and
+    character identifier given in binary, octal, decimal and hexadecimal
+    format.
     """
     title = "ASCII character table"
     description = "This table contains the 95 ASCII printable character."
@@ -104,36 +120,44 @@ def character_indications(stdscr, pos_x: int, pos_y: int, char: int):
     stdscr.addstr(pos_y + 4, pos_x, description)
 
     stdscr.addstr(pos_y + 6, pos_x, character_line)
-    stdscr.addstr(pos_y + 8, pos_x, chr(char))
-    stdscr.addstr(pos_y + 8, pos_x + 7, "%s" % unicodedata.name(chr(char)))
+    stdscr.addstr(pos_y + 8, pos_x, chr(char_code))
+    stdscr.addstr(pos_y + 8, pos_x + 7, unicodedata.name(chr(char_code)))
 
     stdscr.addstr(pos_y + 10, pos_x, conversion_line)
-    stdscr.addstr(pos_y + 12, pos_x, str(bin(char)[2:]))
-    stdscr.addstr(pos_y + 12, pos_x + 10, str(oct(char)[2:]))
-    stdscr.addstr(pos_y + 12, pos_x + 16, str(char))
-    stdscr.addstr(pos_y + 12, pos_x + 22, str(hex(char)[2:]))
+    stdscr.addstr(pos_y + 12, pos_x, "%s" % bin(char_code)[2:])
+    stdscr.addstr(pos_y + 12, pos_x + 10, "%o" % char_code)
+    stdscr.addstr(pos_y + 12, pos_x + 16, "%s" % char_code)
+    stdscr.addstr(pos_y + 12, pos_x + 22, "%x" % char_code)
 
     stdscr.addstr(pos_y + 15, pos_x, exit_indication)
 
 
-def embed_window(stdscr):
-    """Displays borders on the terminal and a rectangle that frames the character table."""
+def embed_window(stdscr) -> NoReturn:
+    """Displays borders on the terminal and a rectangle that frames the
+    character table."""
     stdscr.box()
     curses.textpad.rectangle(stdscr, 2, 13, 16, 50)
 
 
-def main(stdscr):
+def mainloop(stdscr):
     """curses rendering."""
     char_table_pos_x, char_table_pos_y = COLS//2//3 - 6, 4
     interface_pos_x, interface_pos_y = COLS//2, 0
 
-    for char in cursor_position(stdscr, char_table_pos_x, char_table_pos_y, 30, 10):
+    for char in cursor_position(stdscr,
+                                char_table_pos_x,
+                                char_table_pos_y,
+                                30,
+                                10):
         stdscr.clear()
+
         displays_table(stdscr, char_table_pos_x, char_table_pos_y, ASCII_CHARS)
         embed_window(stdscr)
+
         character_indications(stdscr, interface_pos_x, interface_pos_y, char)
+
         stdscr.refresh()
 
 
 if __name__ == "__main__":
-    curses.wrapper(main)
+    curses.wrapper(mainloop)
