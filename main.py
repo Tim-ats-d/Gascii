@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-#
 #  gascii.py
 #  A graphic and interactive table of printable ASCII characters.
 #
@@ -25,17 +22,22 @@
 
 import curses
 import curses.textpad
-import os
-from typing import Any, NoReturn
+from typing import NoReturn
 import unicodedata
 
 
-COLS, ROWS = os.get_terminal_size()
-ASCII_CHARS = [chr(char) for char in range(32, 127)]
+ConsoleEffect = NoReturn
+
+ASCII_CHARS = [chr(char)
+                   for char in range(32, 127)]
+
+TITLE = "ASCII character table"
+DESCRIPTION = "The 95 ASCII printable characters."
+EXIT_INDICATION = "Press q to quit."
 
 
 def make_chunk(iterable: list,
-               chunk_length: int) -> list[Any]:
+               chunk_length: int) -> list:
     """Yield chunk of given iterator separated into chunk_length bundles."""
     for chunk in range(0, len(iterable), chunk_length):
         yield iterable[chunk:chunk + chunk_length]
@@ -44,7 +46,7 @@ def make_chunk(iterable: list,
 def displays_table(stdscr,
                    pos_x: int,
                    pos_y: int,
-                   chars_list: list) -> NoReturn:
+                   chars_list: list) -> ConsoleEffect:
     """Displays each character in the list of given characters spaced from each
     other and separated by a blank line.
     """
@@ -101,60 +103,63 @@ def cursor_position(stdscr,
         stdscr.refresh()
 
 
-def character_indications(stdscr,
-                          pos_x: int,
-                          pos_y: int,
-                          char_code: int) -> NoReturn:
+def char_indications(stdscr,
+                     pos_x: int,
+                     pos_y: int,
+                     char_code: int) -> ConsoleEffect:
     """Displays an information panel on the given character identifier.
+
     The information panel contains title, description, exit indications and
     character identifier given in binary, octal, decimal and hexadecimal
     format.
     """
-    title = "ASCII character table"
-    description = "This table contains the 95 ASCII printable character."
-    character_line = "Char   Character name"
-    conversion_line = "Bin       Oct   Dec   Hex"
-    exit_indication = "Press q to quit."
+    char = chr(char_code)
 
-    stdscr.addstr(pos_y + 1, pos_x, title.center(pos_x - 7), curses.A_BOLD)
-    stdscr.addstr(pos_y + 4, pos_x, description)
+    char_line= "Char: %s" % char 
+    char_name = "Name: %s" % unicodedata.name(char)
 
-    stdscr.addstr(pos_y + 6, pos_x, character_line)
-    stdscr.addstr(pos_y + 8, pos_x, chr(char_code))
-    stdscr.addstr(pos_y + 8, pos_x + 7, unicodedata.name(chr(char_code)))
+    stdscr.addstr(pos_y + 1, pos_x, TITLE.center(pos_x - 7), curses.A_BOLD)
+    stdscr.addstr(pos_y + 3, pos_x, DESCRIPTION)
 
-    stdscr.addstr(pos_y + 10, pos_x, conversion_line)
-    stdscr.addstr(pos_y + 12, pos_x, "%s" % bin(char_code)[2:])
-    stdscr.addstr(pos_y + 12, pos_x + 10, "%o" % char_code)
-    stdscr.addstr(pos_y + 12, pos_x + 16, "%s" % char_code)
-    stdscr.addstr(pos_y + 12, pos_x + 22, "%x" % char_code)
+    stdscr.addstr(pos_y + 5, pos_x, char_line)
+    stdscr.addstr(pos_y + 6, pos_x, char_name)
 
-    stdscr.addstr(pos_y + 15, pos_x, exit_indication)
+    stdscr.addstr(pos_y + 8, pos_x, "Bin: {0:b}".format(char_code))
+    stdscr.addstr(pos_y + 9, pos_x, "Oct: %o" % char_code)
+    stdscr.addstr(pos_y + 10, pos_x, "Dec: %s" % char_code)
+    stdscr.addstr(pos_y + 11, pos_x, "Hex: %x" % char_code)
+
+    stdscr.addstr(pos_y + 13, pos_x, EXIT_INDICATION)
 
 
-def embed_window(stdscr) -> NoReturn:
-    """Displays borders on the terminal and a rectangle that frames the
-    character table."""
-    stdscr.box()
-    curses.textpad.rectangle(stdscr, 2, 13, 16, 50)
-
-
-def mainloop(stdscr):
+def mainloop(stdscr) -> ConsoleEffect:
     """curses rendering."""
-    char_table_pos_x, char_table_pos_y = COLS//2//3 - 6, 4
-    interface_pos_x, interface_pos_y = COLS//2, 0
+    rows, cols = stdscr.getmaxyx()
+    
+    char_table_pos_x, char_table_pos_y = (4, 2)
+    interface_pos = (cols//2, 0)
 
-    for char in cursor_position(stdscr,
-                                char_table_pos_x,
-                                char_table_pos_y,
-                                30,
-                                10):
+    cursor_positions = cursor_position(stdscr,
+                                       char_table_pos_x,
+                                       char_table_pos_y,
+                                       30, 10)
+
+    for char in cursor_positions:        
         stdscr.clear()
+        stdscr.box()
 
-        displays_table(stdscr, char_table_pos_x, char_table_pos_y, ASCII_CHARS)
-        embed_window(stdscr)
+        curses.textpad.rectangle(stdscr,
+                                 char_table_pos_y - 1,
+                                 char_table_pos_x - 2,
+                                 13, 36)
 
-        character_indications(stdscr, interface_pos_x, interface_pos_y, char)
+        displays_table(stdscr,
+                       char_table_pos_x,
+                       char_table_pos_y,
+                       ASCII_CHARS)
+        char_indications(stdscr,
+                         *interface_pos,
+                         char)
 
         stdscr.refresh()
 
