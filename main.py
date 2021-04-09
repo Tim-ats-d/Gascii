@@ -1,5 +1,5 @@
-#  gascii.py
-#  A graphic and interactive table of printable ASCII characters.
+# gascii.py
+# A graphic and interactive table of printable ASCII characters.
 #
 #  Copyright 2020 Timéo Arnouts <tim.arnouts@protonmail.com>
 #
@@ -28,8 +28,7 @@ import unicodedata
 
 ConsoleEffect = NoReturn
 
-ASCII_CHARS = [chr(char)
-                   for char in range(32, 127)]
+ASCII_CHARS = [chr(char) for char in range(32, 127)]
 
 TITLE = "ASCII character table"
 DESCRIPTION = "The 95 ASCII printable characters."
@@ -80,9 +79,9 @@ def cursor_position(stdscr,
             cursor_x -= 2
         elif key == curses.KEY_RIGHT:
             cursor_x += 2
-        elif key == 339:  # Page ▲ key.
+        elif key == 339:  # Page ▲ key.
             cursor_y = pos_y
-        elif key == 338:  # Page ▼ key.
+        elif key == 338:  # Page ▼ key.
             cursor_y = pos_y + y_max
         elif key == 262:  # Begin ◄ key.
             cursor_x = pos_x
@@ -115,8 +114,8 @@ def char_indications(stdscr,
     """
     char = chr(char_code)
 
-    char_line= "Char: %s" % char 
-    char_name = "Name: %s" % unicodedata.name(char)
+    char_line = "Char: " + char
+    char_name = "Name: " + unicodedata.name(char)
 
     stdscr.addstr(pos_y + 1, pos_x, TITLE.center(pos_x - 7), curses.A_BOLD)
     stdscr.addstr(pos_y + 3, pos_x, DESCRIPTION)
@@ -135,7 +134,7 @@ def char_indications(stdscr,
 def mainloop(stdscr) -> ConsoleEffect:
     """curses rendering."""
     rows, cols = stdscr.getmaxyx()
-    
+
     char_table_pos_x, char_table_pos_y = (4, 2)
     interface_pos = (cols//2, 0)
 
@@ -144,7 +143,7 @@ def mainloop(stdscr) -> ConsoleEffect:
                                        char_table_pos_y,
                                        30, 10)
 
-    for char in cursor_positions:        
+    for char in cursor_positions:
         stdscr.clear()
         stdscr.box()
 
